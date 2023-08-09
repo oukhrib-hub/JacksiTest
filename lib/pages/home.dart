@@ -20,6 +20,7 @@ class Home extends StatefulWidget {
 class _HomeState extends State<Home> {
   late Future<void> initDatabase;
   Axis cardDirection = Axis.horizontal;
+  int? currentCategory;
   @override
   void initState() {
     Database.homeContext = context;
@@ -62,12 +63,27 @@ class _HomeState extends State<Home> {
                         child: Row(
                           children: [
                             const SizedBox(width: 15),
-                            const ShowAllButton(),
+                            ShowAllButton(
+                              activeBorder: currentCategory == null,
+                              onTap: () {
+                                setState(() {
+                                  currentCategory = null;
+                                });
+                              },
+                            ),
                             Row(
                               children: List.generate(
                                 Database.categories.length,
                                 (index) {
-                                  return CategoryCard(category: Database.categories[index]);
+                                  return CategoryCard(
+                                    activeBorder: currentCategory == Database.categories[index].id,
+                                    category: Database.categories[index],
+                                    onTap: () {
+                                      setState(() {
+                                        currentCategory = Database.categories[index].id;
+                                      });
+                                    },
+                                  );
                                 },
                               ),
                             ),
@@ -100,14 +116,18 @@ class _HomeState extends State<Home> {
                       builder: (context, state) {
                         List<Product> products = state.products;
                         products.sort((b, a) => a.id.compareTo(b.id));
-                        if (products.isEmpty) {
+                        if (products.isEmpty && Database.products.isEmpty) {
                           return SizedBox(
                               height: MediaQuery.of(context).size.height / 2,
-                              child: Center(child: TextButton(
-                                style: ButtonStyle(textStyle: MaterialStatePropertyAll(Theme.of(context).textTheme.bodyMedium)),
-                                onPressed: (){
-                                  Navigator.of(context).push(MaterialPageRoute(builder: (_) => const NewProduct()));
-                                }, child: const Text("أضف المنتجات لتظهر في الصفحة"))));
+                              child: Center(
+                                  child: TextButton(
+                                      style: ButtonStyle(
+                                          textStyle: MaterialStatePropertyAll(Theme.of(context).textTheme.bodyMedium)),
+                                      onPressed: () {
+                                        Navigator.of(context)
+                                            .push(MaterialPageRoute(builder: (_) => const NewProduct()));
+                                      },
+                                      child: const Text("أضف المنتجات لتظهر في الصفحة"))));
                         }
                         return GridView.builder(
                           physics: const NeverScrollableScrollPhysics(),
